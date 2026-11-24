@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyFlix</title>
+<style>
+body {
+  margin: 0;
+  background-color: black;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+.navbar {
+  background-color: #111;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+}
+.navbar h1 {
+  color: red;
+  margin: 0;
+  font-size: 28px;
+  margin-right: 30px;
+}
+.navbar a {
+  color: white;
+  margin-right: 20px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.navbar a:hover {
+  color: red;
+}
+.navbar input {
+  margin-left: auto;
+  padding: 6px;
+  font-size: 14px;
+}
+.banner {
+  background-color: #7a0000;
+  padding: 80px 30px;
+  height: 250px;
+}
+.banner h2 {
+  font-size: 40px;
+  margin: 0 0 10px 0;
+}
+.banner p {
+  width: 50%;
+  font-size: 16px;
+}
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-right: 10px;
+  border: none;
+  cursor: pointer;
+}
+.play {
+  background-color: white;
+  color: black;
+}
+.info {
+  background-color: gray;
+  color: white;
+}
+.section-title {
+  margin: 20px 30px 10px 30px;
+  font-size: 22px;
+}
+.row {
+  display: flex;
+  overflow-x: scroll;
+  padding: 0 30px;
+}
+.movie {
+  min-width: 150px;
+  height: 220px;
+  margin-right: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+  border: 1px solid #444;
+}
+.movie:hover {
+  transform: scale(1.1);
+}
+#popup {
+  display: none;
+  position: fixed;
+  top: 100px;
+  left: 25%;
+  width: 50%;
+  background-color: #222;
+  border: 2px solid white;
+  padding: 20px;
+}
+#popup h2 {
+  margin-top: 0;
+}
+.close {
+  float: right;
+  background-color: red;
+  color: white;
+  padding: 5px 10px;
+  margin: 0;
+}
+#msg {
+  margin: 20px 30px;
+  color: gray;
+}
+.footer {
+  text-align: center;
+  color: gray;
+  padding: 30px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  #popup { left: 5%; width: 85%; }
+  .banner p { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <h1>MyFlix</h1>
+  <a onclick="showAll()">Home</a>
+  <a onclick="showList()">My List</a>
+  <input type="text" id="search" placeholder="Search..." onkeyup="searchMovies()">
+</div>
+
+<div class="banner">
+  <h2>Orbit Nine</h2>
+  <p>Nine strangers wake up on a space station with no crew and one hour of oxygen left.</p>
+  <button class="play" onclick="alert('Playing Orbit Nine')">Play</button>
+  <button class="info" onclick="openPopup(3)">More Info</button>
+</div>
+
+<div id="msg"></div>
+<div id="content"></div>
+
+<div id="popup">
+  <button class="close" onclick="closePopup()">X</button>
+  <h2 id="p-title"></h2>
+  <p id="p-info"></p>
+  <p id="p-desc"></p>
+  <button class="play" onclick="alert('Playing movie')">Play</button>
+  <button class="info" id="p-btn" onclick="toggleList()">Add to My List</button>
+</div>
+
+<div class="footer">MyFlix - project made for practice. Movies are made up.</div>
+
+<script>
+var movies = [
+  {id: 1, title: "Neon Requiem", year: 2025, type: "Series", genre: "Sci-Fi", color: "#8b2a1a", desc: "A memory broker finds a secret hidden in the dreams she sells."},
+  {id: 2, title: "The Last Lighthouse", year: 2024, type: "Movie", genre: "Drama", color: "#1f3a5f", desc: "A lighthouse keeper writes down a ship every night, but no ship has come in 30 years."},
+  {id: 3, title: "Orbit Nine", year: 2026, type: "Series", genre: "Sci-Fi", color: "#1a5f7a", desc: "Nine strangers wake up on a space station with no crew."},
+  {id: 4, title: "Dust and Diamonds", year: 2023, type: "Movie", genre: "Action", color: "#7a5c1a", desc: "Two smugglers cross a desert with a case nobody can open."},
+  {id: 5, title: "Kitchen Wars", year: 2025, type: "Series", genre: "Comedy", color: "#a64b00", desc: "Eight home cooks run one tiny restaurant."},
+  {id: 6, title: "Paper Moons", year: 2022, type: "Movie", genre: "Romance", color: "#555555", desc: "Two people in different years fall in love through letters."},
+  {id: 7, title: "Hollow Pines", year: 2024, type: "Series", genre: "Horror", color: "#1e4d2b", desc: "A family moves to a forest town where something is wrong with the trees."},
+  {id: 8, title: "Zero Gravity Club", year: 2026, type: "Movie", genre: "Comedy", color: "#0b6e5a", desc: "The worst cargo crew in space has to deliver karaoke machines."},
+  {id: 9, title: "Midnight Cricket", year: 2025, type: "Series", genre: "Sport", color: "#2d6a1f", desc: "A fast bowler wants one more season and one big final."},
+  {id: 10, title: "Glass Harbor", year: 2023, type: "Movie", genre: "Thriller", color: "#14507a", desc: "A harbor inspector finds a container that was never shipped."}
+];
+
+var myList = [];
+var currentId = 0;
+
+function makeRow(title, items) {
+  if (items.length == 0) return "";
+  var html = '<div class="section-title">' + title + '</div><div class="row">';
+  for (var i = 0; i < items.length; i++) {
+    var m = items[i];
+    html += '<div class="movie" style="background-color:' + m.color + '" onclick="openPopup(' + m.id + ')">' + m.title + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function showAll() {
+  document.getElementById("msg").innerHTML = "";
+  document.getElementById("search").value = "";
+  var content = "";
+  content += makeRow("Popular", movies);
+  content += makeRow("Series", movies.filter(function(m) { return m.type == "Series"; }));
+  content += makeRow("Movies", movies.filter(function(m) { return m.type == "Movie"; }));
+  content += makeRow("Sci-Fi", movies.filter(function(m) { return m.genre == "Sci-Fi"; }));
+  document.getElementById("content").innerHTML = content;
+}
+
+function showList() {
+  var items = movies.filter(function(m) { return myList.indexOf(m.id) != -1; });
+  if (items.length == 0) {
+    document.getElementById("msg").innerHTML = "Your list is empty.";
+    document.getElementById("content").innerHTML = "";
+  } else {
+    document.getElementById("msg").innerHTML = "";
+    document.getElementById("content").innerHTML = makeRow("My List", items);
+  }
+}
+
+function searchMovies() {
+  var text = document.getElementById("search").value.toLowerCase();
+  if (text == "") {
+    showAll();
+    return;
+  }
+  var found = movies.filter(function(m) {
+    return m.title.toLowerCase().indexOf(text) != -1 || m.genre.toLowerCase().indexOf(text) != -1;
+  });
+  if (found.length == 0) {
+    document.getElementById("msg").innerHTML = "No results found.";
+    document.getElementById("content").innerHTML = "";
+  } else {
+    document.getElementById("msg").innerHTML = "";
+    document.getElementById("content").innerHTML = makeRow("Search results", found);
+  }
+}
+
+function openPopup(id) {
+  var m = movies.filter(function(x) { return x.id == id; })[0];
+  currentId = id;
+  document.getElementById("p-title").innerHTML = m.title;
+  document.getElementById("p-info").innerHTML = m.year + " | " + m.type + " | " + m.genre;
+  document.getElementById("p-desc").innerHTML = m.desc;
+  updateButton();
+  document.getElementById("popup").style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+function updateButton() {
+  var btn = document.getElementById("p-btn");
+  if (myList.indexOf(currentId) == -1) {
+    btn.innerHTML = "Add to My List";
+  } else {
+    btn.innerHTML = "Remove from My List";
+  }
+}
+
+function toggleList() {
+  var index = myList.indexOf(currentId);
+  if (index == -1) {
+    myList.push(currentId);
+  } else {
+    myList.splice(index, 1);
+  }
+  updateButton();
+}
+
+showAll();
+</script>
+</body>
+</html>
